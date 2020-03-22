@@ -8,7 +8,7 @@ endif
 #CFLAGS=-I. -Ofast -march=native -ffast-math -g
 
 yamandel: yamandel.o yamandel.c yasmandel.o
-	$(CC) yamandel.c -L/usr/X11R6/lib  -lpthread -lX11 yasmandel.o -o yamandel
+	$(CC) $(CFLAGS) yamandel.c -L/usr/X11R6/lib  -lpthread -lX11 yasmandel.o -o yamandel
 
 reformat:
 	clang-format -i yamandel.c
