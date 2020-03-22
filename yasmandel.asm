@@ -216,11 +216,11 @@ endloop:
           ;RDI colortable
            ;rdx pixeladddr
           mov eax, dword [rdi+r10*4]
-          mov dword [r13 + rdx], eax ;
+          mov dword [r13 + rdx*4], eax ;
           ;c_re = c_re+re_step;
           addsd xmm1, xmm5
           ;pixeladr++;
-          adc rdx,4h
+          inc rdx
 
           ;inc col and test with r15
           inc r11
