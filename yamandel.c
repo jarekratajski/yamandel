@@ -5,10 +5,10 @@
 #include <string.h>
 #include <time.h>
 
+#define COMPARE_TO_C 1
 
-
-const int initialIterations = 200;
-const int totalThreads = 16;
+const int initialIterations = 2000;
+const int totalThreads = 1;
 const double scalingfact = 0.1;
 const double movingfact = 20.0;
 

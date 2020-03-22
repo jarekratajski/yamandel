@@ -2,7 +2,7 @@ CC=gcc
 ifdef COMPARE
     CFLAGS=-DCOMPARE_TO_C -I. -Ofast -march=native -ffast-math
 else
-    CFLAGS=-I. -Ofast -march=native -ffast-math
+    CFLAGS=-I. -Ofast -march=native -mtune=native -ffast-math
 endif
 #debug
 #CFLAGS=-I. -Ofast -march=native -ffast-math -g
