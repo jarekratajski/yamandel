@@ -44,8 +44,8 @@ change line to use number of cores that You have.
 
 
 ## Strange experiences
-Disclaimer:  this is not professional benchmark. May goal also was not to produce fastest "mandelbrot" - there exist way better algorithms.
-It was more exercise how inexperienced asm coder compares to inexperienced gcc coder :-)
+Disclaimer:  this is not professional benchmark. The goal  was not to produce fastest "mandelbrot" - there exist way better algorithms.
+It was more exercise how inexperienced asm coder code  compares to inexperienced gcc coder code :-)
 
 
 First I did algorithm in C -translating java code I  have googled. 
