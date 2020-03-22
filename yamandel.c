@@ -8,7 +8,7 @@
 
 
 const int initialIterations = 200;
-const int totalThreads = 32;
+const int totalThreads = 16;
 const double scalingfact = 0.1;
 const double movingfact = 20.0;
 
@@ -124,14 +124,14 @@ void calcMandelbrotPart(XWinData *winData, Position *position, int startRow,
 #ifdef COMPARE_TO_C
    debug(winData, position, startRow, rows);
    clock_t mctime = clock();
-   calcMandelbrotPartInC(winData, position, startRow, rows, image32);
+   mandelbrotAsm(winData, position, startRow, rows, image32);
    clock_t afterctime = clock();
 #endif
-  mandelbrotAsm(winData, position, startRow, rows, image32);
+  calcMandelbrotPartInC(winData, position, startRow, rows, image32);
 #ifdef COMPARE_TO_C
    clock_t endtime  = clock();
-   printf("time of c calculations:%ld \n", afterctime-mctime);
-   printf("time of asm calculations:%ld \n", endtime-afterctime);
+   printf("time of asm calculations:%ld \n", afterctime-mctime);
+   printf("time of c calculations:%ld \n", endtime-afterctime);
 #endif
 }
 

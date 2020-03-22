@@ -44,15 +44,17 @@ change line to use number of cores that You have.
 
 
 ## Strange experiences
- First I did algorithm in C. I have expected that gcc with - O3 and arch native would beat
- my handwritten assembly.
- 
+First I did algorithm in C. 
 
+I have expected that gcc with `-O3` and `arch native` would beat my handwritten assembly.
+
+Results I  get are however strange:
  
- time of c calculations:     5454471 
+ time of c calculations:     5454471
+  
  time of asm calculations:2895857
  
-I analyzed what is gcc producing and  realized that althogh it is using SSE and AVX instrictions
+I have analyzed that is gcc producing and  realized that althogh it is using SSE and AVX instrictions
    it does almost exlusively using scalar operations (no real vectorization).
 This is disappointment. Maybe I did sth wrong (yet another switch?).
 
