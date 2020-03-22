@@ -59,6 +59,8 @@ Results I  get are however strange:
  
  time of asm calculations:2895857
  
+ On `AMD Ryzen Threadripper 2950X 16-Core Processor` (linux running as guest on vmware).
+ 
 I have analyzed what gcc is producing and  realized that although it is using SSE and AVX instructions
    it almost only uses scalar operations (no real vectorization).
 This is disappointment. Maybe I did sth wrong (yet another switch?).
