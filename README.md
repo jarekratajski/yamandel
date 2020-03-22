@@ -55,9 +55,9 @@ I have expected that gcc with `-O3` and `arch native` would beat my handwritten 
 
 Results I  get are however strange:
  
- time of c calculations:     5454471
+ time of c calculations:     5454471μs
  
- time of asm calculations:2895857
+ time of asm calculations:2895857μs
  
  On `AMD Ryzen Threadripper 2950X 16-Core Processor` (linux running as guest on vmware).
  
