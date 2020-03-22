@@ -5,10 +5,8 @@
 #include <string.h>
 #include <time.h>
 
-#define COMPARE_TO_C 1
-
-const int initialIterations = 2000;
-const int totalThreads = 1;
+const int initialIterations = 200;
+const int totalThreads = 16;
 const double scalingfact = 0.1;
 const double movingfact = 20.0;
 
@@ -122,16 +120,16 @@ void calcMandelbrotPartInC(XWinData *winData, Position *position, int startRow,
 void calcMandelbrotPart(XWinData *winData, Position *position, int startRow,
                            int rows, unsigned int *image32) {
 #ifdef COMPARE_TO_C
-   debug(winData, position, startRow, rows);
-   clock_t mctime = clock();
-   mandelbrotAsm(winData, position, startRow, rows, image32);
-   clock_t afterctime = clock();
+//   debug(winData, position, startRow, rows);
+//   clock_t mctime = clock();
+//   mandelbrotAsm(winData, position, startRow, rows, image32);
+//   clock_t afterctime = clock();
 #endif
   calcMandelbrotPartInC(winData, position, startRow, rows, image32);
 #ifdef COMPARE_TO_C
-   clock_t endtime  = clock();
-   printf("time of asm calculations:%ld \n", afterctime-mctime);
-   printf("time of c calculations:%ld \n", endtime-afterctime);
+//   clock_t endtime  = clock();
+//   printf("time of asm calculations:%ld \n", afterctime-mctime);
+//   printf("time of c calculations:%ld \n", endtime-afterctime);
 #endif
 }
 

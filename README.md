@@ -42,44 +42,7 @@ const int totalThreads = 16;
 change line to use number of cores that You have.
 
 
+## Results
 
-## Strange experiences
-Disclaimer:  this is not professional benchmark. The goal  was not to produce fastest "mandelbrot" - there exist way better algorithms.
-It was more exercise how inexperienced asm coder code  compares to inexperienced gcc coder code :-)
-
-
-First I did algorithm in C -translating java code I  have googled. 
-Then I did the same in assebly x86 64.
-
-I have expected that gcc with `-O3` and `arch native` would beat my handwritten assembly.
-
-Results I  get are however strange:
- 
- time of c calculations:     5454471μs
- 
- time of asm calculations:2895857μs
- 
- On `AMD Ryzen Threadripper 2950X 16-Core Processor` (linux running as guest on vmware).
- 
-I have analyzed what gcc is producing and  realized that although it is using SSE and AVX instructions
-   it almost only uses scalar operations (no real vectorization).
-This is disappointment. Maybe I did sth wrong (yet another switch?).
-
-My assembly code is naive translation of c code. I tried to use some vectorization but it did not really work
-I was struggling too much with errors (typically messing which part of xmm contains x which y etc.)
-
-At the end my asm is not very smart. it is  obviously suboptimal - I was actually happy that it works...
-
-So I am even more surprised by the results - 
-that such asm code seems to beat ggc almost 2 to 1...
-
-Why?
- - did I do sth wrong in c , gcc options?
- - did I do sth wrong in asm (simplification?)
- - ?
-  
-
-    
- 
- 
+OK gcc vectorization seems to do good job.
  
