@@ -60,7 +60,7 @@ Results I  get are however strange:
  time of asm calculations:2895857
  
 I have analyzed what gcc is producing and  realized that although it is using SSE and AVX instructions
-   it almost uses scalar operations (no real vectorization).
+   it almost only uses scalar operations (no real vectorization).
 This is disappointment. Maybe I did sth wrong (yet another switch?).
 
 My assembly code is naive translation of c code. I tried to use some vectorization but it did not really work
