@@ -2,10 +2,12 @@
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
 #include <time.h>
+#include <unistd.h>
 
-const int initialIterations = 200;
+const int initialIterations = 100;
 const int totalThreads = 16;
 const double scalingfact = 0.1;
 const double movingfact = 20.0;
@@ -119,18 +121,20 @@ void calcMandelbrotPartInC(XWinData *winData, Position *position, int startRow,
 
 void calcMandelbrotPart(XWinData *winData, Position *position, int startRow,
                            int rows, unsigned int *image32) {
-#ifdef COMPARE_TO_C
+//#ifdef COMPARE_TO_C
 //   debug(winData, position, startRow, rows);
 //   clock_t mctime = clock();
 //   mandelbrotAsm(winData, position, startRow, rows, image32);
 //   clock_t afterctime = clock();
-#endif
-  calcMandelbrotPartInC(winData, position, startRow, rows, image32);
-#ifdef COMPARE_TO_C
+//#endif
+//#ifndef ONLY_ASM
+   calcMandelbrotPartInC(winData, position, startRow, rows, image32);
+//#endif
+//#ifdef COMPARE_TO_C
 //   clock_t endtime  = clock();
 //   printf("time of asm calculations:%ld \n", afterctime-mctime);
 //   printf("time of c calculations:%ld \n", endtime-afterctime);
-#endif
+//#endif
 }
 
 void *threadedFunc(void *data) {
@@ -219,7 +223,9 @@ XImage *drawMandelbrot(XWinData *winData, Position *position) {
     XImage *ximage =
         XCreateImage(winData->display, winData->visual, winData->depth, ZPixmap,
                      0, (unsigned char *)image32, width, height, 32, 0);
+    printf("image was null\n");
     XInitImage(ximage);
+    printf("xinitimage done\n");
     winData->image = ximage;
   }
   return winData->image;
@@ -321,6 +327,7 @@ int main(void) {
   position->iterations = initialIterations;
   position->colorTable = NULL;
   recalcColorTable(position);
+  XInitThreads();//LESSON - must be called if threads used - just because (even though we do not touch X from other threads)
   XWinData *winData = initDisplayWindow();
   initThreads();
   Drawable window = winData->window;
@@ -334,6 +341,7 @@ int main(void) {
   XImage *ximage = drawMandelbrot(winData, position);
   while (1) {
     while (XPending(display) > 0) {
+
       XNextEvent(display, &e);
       if (e.type == Expose) {
         XPutImage(display, winData->window, gc, ximage, 0, 0, 0, 0,

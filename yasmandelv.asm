@@ -1,4 +1,4 @@
-global mandelbrotAsm
+global mandelbrotAsmV
 
 extern printf, getline, stdin
 
@@ -64,13 +64,13 @@ section .text
  ; callee saves r12-r15, rbx,rbp
 
 
-mandelbrotAsm:
+mandelbrotAsmV:
         push r15
         push r14
         push r13
         push r12
         sub rsp, 128+8 ; needed for correct stack frame alignment (printf)
-        mov qword  [rsp+positionOnStack], rsi
+        mov qword  [rsp+positionOnStack], rsi ; position struct (scale, right, down)
         mov qword  [rsp +winDataOnStack], rdi
         mov dword  [rsp +startRowOnStack], edx
         mov dword  [rsp +rowsOnStack], ecx
@@ -90,13 +90,14 @@ mandelbrotAsm:
         mov rax, r14
         mul r15
         shl rax, 2
-        mov rdx, rax
+        mov rdx, rax ; rdx - address of bytes to write
 
         CVTPI2PD xmm7, [r10 +  winData_widthOffset] ;  (height, width)
         movhlps xmm4, xmm7 ; height in xmm4
         movhlps xmm3, xmm7 ; height in xmm3
 
-
+        ;movq r9, xmm4 ;xmm was 1920 - >ok
+        ;debugDoubleValue  r9
 
         movq xmm5, [rel  const_minus_2]
         divsd xmm4, xmm5 ; height / -2.0
@@ -114,16 +115,15 @@ mandelbrotAsm:
         movq xmm5, [ r13 + position_down_offset] ; down
         addsd xmm4, xmm5 ; c_im  ; xmm4 was -2 -> OK!
 
-        movq r9, xmm4
-        movq xmm12, r9
+        VBROADCASTSD ymm3, xmm4 ; (c_im,  c_im, c_im, c_im)
 
         ;movq r9, xmm4 ; ???
         ;debugDoubleValue  r9
 
         movq xmm1, [r13 + position_right_offset]
         movq xmm14, xmm6 ; scale
-        movq xmm3, [rel  const_minus_2]
-        mulsd xmm14, xmm3
+        movq xmm12, [rel  const_minus_2]
+        mulsd xmm14, xmm12
         addsd xmm14, xmm1  ;xmm2 c_re_left -> was -2 OK
 
         ;movq r9, xmm14
@@ -133,13 +133,18 @@ mandelbrotAsm:
         movq xmm5, [rel  const_plus_4] ; again plus 4
         movlhps xmm5, xmm5  ;xmm5 has 4,4 - confirmed
 
+         ;movq    r9, xmm5
+         ;debugDoubleValue  r9
 
+        ;MOVHPS   [rsp + tmpValStack], xmm11
+        ;debugDoubleValue  qword [rsp+tmpValStack]
 
-        movlhps xmm6, xmm6 ; scale, scale
+        VBROADCASTSD  ymm3, xmm6 ; (scale, scale, scale, scale)
         mulpd xmm5, xmm6 ; confirmed
         divpd  xmm5, xmm7  ;(/ width / height  ;checking {0.0020833333333333333, 0.0037037037037037038}
         movhlps xmm11, xmm5
-
+        VBROADCASTSD ymm7, xmm11 ; (im_step, im_step, im_step, im_step)
+        VBROADCASTSD ymm6, xmm5; (re_step, re_step, re_step, re_step)
 
 
         mov r8d, dword  [rsp + rowsOnStack]
@@ -151,11 +156,24 @@ mandelbrotAsm:
         movq xmm8, [rel  const_plus_4] ; again plus 4
         mov rdi, [r13 +position_colorTable_offset]
         mov r13, [rsp + imageOnStack]
-        ; small sumarry where we are
-        ; xmm5  -  {im_step, re_step} - MOVED to ymm6, ymm7
-        ; xmm11 {im_step}
+
+         ;calculation for c_re_left
+        vpxor  ymm8, ymm8, ymm8 ; (0,0,0,0)
+        movq xmm8, xmm6 ;(0,0,0,re_step)
+        VINSERTF128 ymm8,  ymm8, xmm6,0x1 ; (0,re_step,0,re_step)
+        movlhps xmm8, xmm8  ; (0, re_step, re_step, re_step)
+        ADDPD xmm8, xmm8; (0, re_step, 2re_step, 2re_step)
+        ADDSD xmm8, xmm6;  (0, re_step, 2re_step, 3re_step)
+
+        movlhps xmm14, xmm14
+        VINSERTF128 ymm14, ymm14, xmm14, 0x1; (cr_left, cr_left, cr_left, cr_left)
+        vaddpd  ymm8, ymm14 ; (cr_left, cr_left, cr_left, cr_left) +  (0, re_step, 2re_step, 3re_step)
+
+        ; small summary where we are
+        ; xmm5  -  {im_step, re_step} - REMOVE
+        ; --  REMOVED xmm11 {im_step}
         ; xmm14 - { , c_re_left}
-        ; xmm12 - { , c_im}
+        ; -- REMOVED xmm12 - { , c_im}
         ; xmm15  - 4
         ;  r14 - startRow (will use as index)
         ; r15  -width
@@ -165,12 +183,16 @@ mandelbrotAsm:
         ;RDI colortable
         ;rdx pixeladddr
 
-
+        ;new age
+        ;ymm3 (c_im, c_im, c_im, c_im)
+        ;ymm7 (im_step, im_step, im_step, im_step)
+        ;ymm7 (re_step, re_step, re_step, re_step)
+        ;ymm8; c_re_left   + (0, re_step, 2re_step, 3re_step)
 
 rowsLoop:
         ;main rows  loop on r14 up to r8 (
-         ; xmm1 - c_re
-         movq xmm1, xmm14  ; start from c_re_left
+        ; ymm2 - c_re
+        VMOVUPD  ymm2, ymm8  ; start from c_re_left
 
          ;main cols loop on r11 up to r15
          xor r11,r11
