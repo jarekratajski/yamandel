@@ -174,6 +174,8 @@ mandelbrotAsmV:
 
         VMOVUPD ymm15,  [rel  const_pplus_4]
         VMOVUPD ymm14,  [rel  const_ones]
+        vaddpd ymm6,ymm6,ymm6 ;; double it
+        vaddpd ymm6,ymm6,ymm6 ;; double it
         ; small summary where we are
         ; xmm5  -  {im_step, re_step} - REMOVE
         ; --  REMOVED xmm11 {im_step}
@@ -191,7 +193,7 @@ mandelbrotAsmV:
         ;new age
         ;ymm3 (c_im, c_im, c_im, c_im)
         ;ymm7 (im_step, im_step, im_step, im_step)
-        ;ymm6 (re_step, re_step, re_step, re_step)
+        ;ymm6 (re_step, re_step, re_step, re_step)*4 //LESSSOn was not initially * 4
         ;ymm8; c_re_left   + (0, re_step, 2re_step, 3re_step)
         ;ymm15  - 4,4,4,4
         ;ymm14 - 1,1,1,1
@@ -238,20 +240,37 @@ iterationsLoop:
         vaddpd ymm1, ymm3 ; 2*x*y + c_im
 
         VPAND ymm10, ymm12,ymm14
-        vaddpd ymm13, ymm10
+        VPADDQ  ymm13, ymm10 ; error here (added doubles (vaddpd)- but should int64)
           inc r10
           jmp iterationsLoop
 endloop:  ;-- here ended - rewriting (we need to store iterations better (in ymm integer
-          ;we have in r10 iterations (ymm13 has better version)
+          ;we have in r10 iterations (ymm13 has better/newer version)
           ; r13 img'
           ;RDI colortable
            ;rdx pixeladddr
+           ;lets extract addresses
+           ;ymm13 indices
+           VEXTRACTI128   xmm10, ymm13,1 ; first 2 vals
+           PEXTRQ r10, xmm10,1
           mov eax, dword [rdi+r10*4]
-          mov dword [r13 + rdx], eax ;
+          mov dword [r13 + rdx], eax ; strored 1st val
+          add rdx, 4h
+          PEXTRQ r10,xmm10,0
+          mov eax, dword [rdi+r10*4]
+          mov dword [r13 + rdx], eax ; strored 2nd val
+          add rdx, 4h
+          PEXTRQ r10,xmm13,1
+        mov eax, dword [rdi+r10*4]
+        mov dword [r13 + rdx], eax ; strored 3rd val
+        add rdx, 4h
+        PEXTRQ r10,xmm13,0
+        mov eax, dword [rdi+r10*4]
+        mov dword [r13 + rdx], eax ; strored 4th val
+
           ;c_re = c_re+re_step;
-          addsd xmm1, xmm5
+
           ;pixeladr++;
-          add rdx, 10h
+          add rdx, 4h
 
           ;inc col and test with r15
           add r11,4h
@@ -261,7 +280,7 @@ endloop:  ;-- here ended - rewriting (we need to store iterations better (in ymm
 
 
           ;c_im = c_im  + im_step;
-          addsd xmm12, xmm11
+
           ;inc row and test   r14 up to r8
           inc r14
           cmp r14,  r8
