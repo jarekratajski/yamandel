@@ -117,7 +117,7 @@ mandelbrotAsmV:
 
         VBROADCASTSD ymm3, xmm4 ; (c_im,  c_im, c_im, c_im)
 
-        ;movq r9, xmm4 ; ???
+        ;movq r9, xmm3 ; ???
         ;debugDoubleValue  r9
 
         movq xmm1, [r13 + position_right_offset]
@@ -139,8 +139,8 @@ mandelbrotAsmV:
         ;MOVHPS   [rsp + tmpValStack], xmm11
         ;debugDoubleValue  qword [rsp+tmpValStack]
 
-        VBROADCASTSD  ymm3, xmm6 ; (scale, scale, scale, scale)
-        mulpd xmm5, xmm3 ;  confirmed
+        VBROADCASTSD  ymm0, xmm6 ; (scale, scale, scale, scale)
+        mulpd xmm5, xmm0 ;  confirmed
         divpd  xmm5, xmm7  ;(/ width / height  ;checking {0.0020833333333333333, 0.0037037037037037038}
         movhlps xmm11, xmm5
 
@@ -251,10 +251,10 @@ endloop:  ;-- here ended - rewriting (we need to store iterations better (in ymm
           ;c_re = c_re+re_step;
           addsd xmm1, xmm5
           ;pixeladr++;
-          add rdx, 4h
+          add rdx, 10h
 
           ;inc col and test with r15
-          inc r11
+          add r11,4h
           cmp r11,r15
           vaddpd ymm2, ymm6 ; c_re + re_step
           jl colsLoop

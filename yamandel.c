@@ -122,20 +122,20 @@ void calcMandelbrotPartInC(XWinData *winData, Position *position, int startRow,
 
 void calcMandelbrotPart(XWinData *winData, Position *position, int startRow,
                            int rows, unsigned int *image32) {
-//#ifdef COMPARE_TO_C
+#ifdef COMPARE_TO_C
 //   debug(winData, position, startRow, rows);
-//   clock_t mctime = clock();
-mandelbrotAsmV(winData, position, startRow, rows, image32);
-//   clock_t afterctime = clock();
-//#endif
-//#ifndef ONLY_ASM
-   //calcMandelbrotPartInC(winData, position, startRow, rows, image32);
-//#endif
-//#ifdef COMPARE_TO_C
-//   clock_t endtime  = clock();
-//   printf("time of asm calculations:%ld \n", afterctime-mctime);
-//   printf("time of c calculations:%ld \n", endtime-afterctime);
-//#endif
+   clock_t mctime = clock();
+   calcMandelbrotPartInC(winData, position, startRow, rows, image32);
+    clock_t afterctime = clock();
+#endif
+
+   mandelbrotAsmV(winData, position, startRow, rows, image32);
+
+#ifdef COMPARE_TO_C
+   clock_t endtime  = clock();
+   printf("time of c calculations:%ld \n", afterctime-mctime);
+   printf("time of asm calculations:%ld \n", endtime-afterctime);
+#endif
 }
 
 void *threadedFunc(void *data) {
@@ -300,7 +300,7 @@ XWinData *initDisplayWindow() {
                ExposureMask | KeyPressMask | StructureNotifyMask);
   XMapWindow(winData->display, winData->window);
   winData->gc = XCreateGC(winData->display, winData->window, 0, 0);
-  winData->width = windowAttributes.width;
+  winData->width = (windowAttributes.width/4)*4;
   winData->height = windowAttributes.height;
   return winData;
 }
@@ -394,7 +394,7 @@ int main(void) {
       if (e.type == ConfigureNotify) {
         XConfigureEvent xce = e.xconfigure;
         if (xce.width != winData->width || xce.height != winData->height) {
-          winData->width = xce.width;
+          winData->width = (xce.width /4) *4;
           winData->height = xce.height;
           freeOldImage(winData);
           recalcRowsForThreads(winData);
