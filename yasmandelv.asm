@@ -22,38 +22,38 @@ extern printf, getline, stdin
 
 %macro  debugIntValue 1
 
-                mov rsi, %1
-                lea rdi, [rel debugIntValMsg]
-                sub  rsp, 64   ; stack space
-                xor  rax, rax
-                call  printf  WRT ..plt
-                add rsp, 64
+    mov rsi, %1
+    lea rdi, [rel debugIntValMsg]
+    sub  rsp, 64   ; stack space
+    xor  rax, rax
+    call  printf  WRT ..plt
+    add rsp, 64
 
 %endmacro
 
 %macro  debugDoubleValue 1
 
-                push rax
-                push rsi
-                push rdi
-                push r8
-                push r9
+    push rax
+    push rsi
+    push rdi
+    push r8
+    push r9
 
-                mov rax,rax
-                mov rsi, %1
-                movq xmm0, %1
-                ;movlps  xmm0, qword %1
-                mov rax,1
-                lea rdi, [rel debugDoubleValMsg]
-                sub  rsp, 64+8   ; stack space
-                call  printf  WRT ..plt
-                add rsp, 64+8
+    mov rax,rax
+    mov rsi, %1
+    movq xmm0, %1
+    ;movlps  xmm0, qword %1
+    mov rax,1
+    lea rdi, [rel debugDoubleValMsg]
+    sub  rsp, 64+8   ; stack space
+    call  printf  WRT ..plt
+    add rsp, 64+8
 
-                pop r9
-                pop r8
-                pop rdi
-                pop rsi
-                pop rax
+    pop r9
+    pop r8
+    pop rdi
+    pop rsi
+    pop rax
 
 %endmacro
 
@@ -65,36 +65,34 @@ section .text
 
 
 mandelbrotAsmV:
-        push r15
-        push r14
-        push r13
-        push r12
-        sub rsp, 128+8 ; needed for correct stack frame alignment (printf)
-        mov qword  [rsp+positionOnStack], rsi ; position struct (scale, right, down)
-        mov qword  [rsp +winDataOnStack], rdi
-        mov dword  [rsp +startRowOnStack], edx
-        mov dword  [rsp +rowsOnStack], ecx
-        mov [rsp +imageOnStack], r8
+    push r15
+    push r14
+    push r13
+    push r12
+    sub rsp, 128+8 ; needed for correct stack frame alignment (printf)
+    mov qword  [rsp+positionOnStack], rsi ; position struct (scale, right, down)
+    mov qword  [rsp +winDataOnStack], rdi
+    mov dword  [rsp +startRowOnStack], edx
+    mov dword  [rsp +rowsOnStack], ecx
+    mov [rsp +imageOnStack], r8
 
+    xor r15,r15
+    xor r14,r14
+    ;xor r12,r12
+    mov r10, [rsp + winDataOnStack]
+    mov r15d, dword [r10 +  winData_widthOffset]
+    ;mov r15h, dword[r10  +   winData_widthOffset]
+    mov r14d, dword [rsp +startRowOnStack]
+    mov r13,  [ rsp + positionOnStack]
 
+    mov rax, r14
+    mul r15
+    shl rax, 2
+    mov rdx, rax ; rdx - address of bytes to write
 
-        xor r15,r15
-        xor r14,r14
-        ;xor r12,r12
-        mov r10, [rsp + winDataOnStack]
-        mov r15d, dword [r10 +  winData_widthOffset]
-        ;mov r15h, dword[r10  +   winData_widthOffset]
-        mov r14d, dword [rsp +startRowOnStack]
-        mov r13,  [ rsp + positionOnStack]
-
-        mov rax, r14
-        mul r15
-        shl rax, 2
-        mov rdx, rax ; rdx - address of bytes to write
-
-        CVTPI2PD xmm7, [r10 +  winData_widthOffset] ;  (height, width)
-        movhlps xmm4, xmm7 ; height in xmm4
-        movhlps xmm3, xmm7 ; height in xmm3
+    CVTPI2PD xmm7, [r10 +  winData_widthOffset] ;  (height, width)
+    movhlps xmm4, xmm7 ; height in xmm4
+    movhlps xmm3, xmm7 ; height in xmm3
 
         ;movq r9, xmm4 ;xmm was 1920 - >ok
         ;debugDoubleValue  r9
