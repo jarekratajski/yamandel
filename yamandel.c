@@ -8,7 +8,7 @@
 #include <unistd.h>
 
 const int initialIterations = 100;
-const int totalThreads = 16;
+const int totalThreads = 1;
 const double scalingfact = 0.1;
 const double movingfact = 20.0;
 
@@ -41,7 +41,8 @@ struct ThreadCoord {
 
 extern void mandelbrotAsm(XWinData *winData, Position *position, int startRow,
                           int rows, unsigned int *image32);
-
+extern void mandelbrotAsmV(XWinData *winData, Position *position, int startRow,
+                          int rows, unsigned int *image32);
 
 struct ThreadCoord *allThreads;
 
@@ -124,11 +125,11 @@ void calcMandelbrotPart(XWinData *winData, Position *position, int startRow,
 //#ifdef COMPARE_TO_C
 //   debug(winData, position, startRow, rows);
 //   clock_t mctime = clock();
-//   mandelbrotAsm(winData, position, startRow, rows, image32);
+mandelbrotAsmV(winData, position, startRow, rows, image32);
 //   clock_t afterctime = clock();
 //#endif
 //#ifndef ONLY_ASM
-   calcMandelbrotPartInC(winData, position, startRow, rows, image32);
+   //calcMandelbrotPartInC(winData, position, startRow, rows, image32);
 //#endif
 //#ifdef COMPARE_TO_C
 //   clock_t endtime  = clock();

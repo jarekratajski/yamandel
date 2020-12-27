@@ -140,9 +140,11 @@ mandelbrotAsmV:
         ;debugDoubleValue  qword [rsp+tmpValStack]
 
         VBROADCASTSD  ymm3, xmm6 ; (scale, scale, scale, scale)
-        mulpd xmm5, xmm6 ; confirmed
+        mulpd xmm5, xmm3 ;  confirmed
         divpd  xmm5, xmm7  ;(/ width / height  ;checking {0.0020833333333333333, 0.0037037037037037038}
         movhlps xmm11, xmm5
+
+
         VBROADCASTSD ymm7, xmm11 ; (im_step, im_step, im_step, im_step)
         VBROADCASTSD ymm6, xmm5; (re_step, re_step, re_step, re_step)
 
@@ -169,6 +171,9 @@ mandelbrotAsmV:
         VINSERTF128 ymm14, ymm14, xmm14, 0x1; (cr_left, cr_left, cr_left, cr_left)
         vaddpd  ymm8, ymm14 ; (cr_left, cr_left, cr_left, cr_left) +  (0, re_step, 2re_step, 3re_step)
 
+
+        VMOVUPD ymm15,  [rel  const_pplus_4]
+        VMOVUPD ymm14,  [rel  const_ones]
         ; small summary where we are
         ; xmm5  -  {im_step, re_step} - REMOVE
         ; --  REMOVED xmm11 {im_step}
@@ -186,50 +191,58 @@ mandelbrotAsmV:
         ;new age
         ;ymm3 (c_im, c_im, c_im, c_im)
         ;ymm7 (im_step, im_step, im_step, im_step)
-        ;ymm7 (re_step, re_step, re_step, re_step)
+        ;ymm6 (re_step, re_step, re_step, re_step)
         ;ymm8; c_re_left   + (0, re_step, 2re_step, 3re_step)
+        ;ymm15  - 4,4,4,4
+        ;ymm14 - 1,1,1,1
+        ;ymm13  - iterations (0)
 
 rowsLoop:
         ;main rows  loop on r14 up to r8 (
         ; ymm2 - c_re
-        VMOVUPD  ymm2, ymm8  ; start from c_re_left
+        VMOVUPD  ymm2, ymm8 ; start from c_re_left
 
          ;main cols loop on r11 up to r15
          xor r11,r11
 colsLoop:
-         xorps xmm0,xmm0  ; {x,y}
+         vpxor ymm0,ymm0 ; x{0,0,0,0} -
+         vpxor ymm1, ymm1; y{0,0,0,0}
 
         xor r10,r10 ; iteration
+        vpxor ymm13,ymm13
 iterationsLoop:
-          movhlps  xmm8, xmm0 ; y in xmm 8
-          movlhps  xmm8, xmm0 ; {y, x} in xmm 8
+          VMOVUPD ymm4, ymm0 ; {x,x,x,x}
+          VMOVUPD ymm5, ymm1; {y,y,y,y}
 
-          movhlps  xmm9, xmm8 ; y in xmm 9
-          movlhps  xmm9, xmm8 ; {x, y} in xmm 9
+          VMULPD  ymm10, ymm4, ymm4 ;{x*x,x*x,x*x,x*x}
+          VMULPD  ymm11, ymm5, ymm5 ; {y*y,y*y,y*y,y*y}
 
-          mulpd xmm0,xmm0  ; double sqx = x*x; double sqy = y*y;
-          xorps xmm2, xmm2
-          VHADDPD   xmm2, xmm0, xmm2 ; xmm2 lower has sqx  + sqy
-          CMPNLTSD   xmm2, xmm15  ; xompare with 4 /bug
-          movq rax, xmm2
-          cmp rax, 0xffffffff
+
+
+          vaddpd ymm12, ymm10, ymm11 ; x*x + y*y
+          VCMPLTPD  ymm12, ymm15; ,  1h ;LT_OS (LT)  xompare with 4 /bug
+          ; as long as there is at least one true (0xffffffff) we continue
+          ; we stop if all is 0
+          VTESTPD ymm12, ymm12; trick - will set ZF only if all bits were 0
           je endloop
           cmp r10,r12
           jg endloop
-          mulpd xmm9,xmm8;  {x*y,x*y}
-          addsd xmm9,xmm9; *2
-          addsd xmm9, xmm12; x*y*2 + c_im (y)
-          ; sqx-sqy+c_re
-          pxor xmm10,xmm10
-          HSUBPD  xmm0, xmm10; probably{ --, x*x -y*y}
-          ADDSD xmm0, xmm1 ; +c_re  ; x_new
+         VMOVUPD ymm0, ymm10 ; ymm0 = x*x
+         VMOVUPD ymm1, ymm11; ymm1 = y*y
 
+         vsubpd ymm0, ymm0, ymm1; x*x - y*y
+         vaddpd ymm0, ymm0, ymm2; x*x -y*y + c_re
 
-          movlhps xmm0, xmm9
+        vmulpd ymm1, ymm4, ymm5 ; x*y
+        vaddpd ymm1, ymm1, ymm1; 2*x*y
+        vaddpd ymm1, ymm3 ; 2*x*y + c_im
+
+        VPAND ymm10, ymm12,ymm14
+        vaddpd ymm13, ymm10
           inc r10
           jmp iterationsLoop
-endloop:
-          ;we have in r10 iterations
+endloop:  ;-- here ended - rewriting (we need to store iterations better (in ymm integer
+          ;we have in r10 iterations (ymm13 has better version)
           ; r13 img'
           ;RDI colortable
            ;rdx pixeladddr
@@ -243,6 +256,7 @@ endloop:
           ;inc col and test with r15
           inc r11
           cmp r11,r15
+          vaddpd ymm2, ymm6 ; c_re + re_step
           jl colsLoop
 
 
@@ -251,6 +265,7 @@ endloop:
           ;inc row and test   r14 up to r8
           inc r14
           cmp r14,  r8
+          vaddpd ymm3, ymm7
           jl rowsLoop
 
 
@@ -267,6 +282,8 @@ section .rodata
   const_minus_2: dq -2.0
   const_plus_2: dq 2.0
   const_plus_4: dq 4.0
+  const_pplus_4: dq 4.0,4.0,4.0,4.0
+  const_ones: dq 1,1,1,1
 
 
 
