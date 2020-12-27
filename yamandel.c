@@ -8,7 +8,7 @@
 #include <unistd.h>
 
 const int initialIterations = 100;
-const int totalThreads = 1;
+const int totalThreads = 8;
 const double scalingfact = 0.1;
 const double movingfact = 20.0;
 
@@ -120,23 +120,30 @@ void calcMandelbrotPartInC(XWinData *winData, Position *position, int startRow,
   }
 }
 
+long totalTime(struct timespec  time) {
+        return 1000000000*time.tv_sec +  time.tv_nsec;
+}
+
 void calcMandelbrotPart(XWinData *winData, Position *position, int startRow,
                            int rows, unsigned int *image32) {
 #ifdef COMPARE_TO_C
+   struct timespec start, afterc, end;
 //   debug(winData, position, startRow, rows);
-   clock_t mctime = clock();
+   clock_gettime(CLOCK_THREAD_CPUTIME_ID , &start);
    calcMandelbrotPartInC(winData, position, startRow, rows, image32);
-    clock_t afterctime = clock();
+   clock_gettime(CLOCK_THREAD_CPUTIME_ID , &afterc);
 #endif
 
    mandelbrotAsmV(winData, position, startRow, rows, image32);
 
 #ifdef COMPARE_TO_C
-   clock_t endtime  = clock();
-   printf("time of c calculations:%ld \n", afterctime-mctime);
-   printf("time of asm calculations:%ld \n", endtime-afterctime);
+   clock_gettime(CLOCK_THREAD_CPUTIME_ID , &end);
+   printf("time of c calculations:%ld \n", totalTime(afterc)-totalTime(start));
+   printf("time of asm calculations:%ld \n", totalTime(end)-totalTime(afterc));
 #endif
 }
+
+
 
 void *threadedFunc(void *data) {
   PlotThreadData *threadData = (PlotThreadData *)data;
