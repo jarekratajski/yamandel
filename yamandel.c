@@ -357,7 +357,10 @@ int main(void) {
 
       }
       if (e.type == KeyPress) {
+
         printf("key = %d\n", e.xkey.keycode);
+        KeySym ksym = XLookupKeysym(&(e.xkey),1);
+         printf("ksym = %ld\n", ksym);
         if (e.xkey.keycode == 38) {
           position->scale = position->scale * (1 + scalingfact);
           ximage = redraw(winData, position);
