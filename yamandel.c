@@ -1,4 +1,6 @@
 #include <X11/Xlib.h>
+#define XK_MISCELLANY
+#include <X11/keysymdef.h>
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -369,19 +371,19 @@ int main(void) {
           position->scale = position->scale * (1 - scalingfact);
           ximage = redraw(winData, position);
         }
-        if (e.xkey.keycode == 113) {
+        if (ksym == XK_Left) {
           position->right = position->right - position->scale / movingfact;
           ximage = redraw(winData, position);
         }
-        if (e.xkey.keycode == 114) {
+        if (ksym == XK_Right) {
           position->right = position->right + position->scale / movingfact;
           ximage = redraw(winData, position);
         }
-        if (e.xkey.keycode == 111) {
+        if (ksym == XK_Up) {
           position->down = position->down - position->scale / movingfact;
           ximage = redraw(winData, position);
         }
-        if (e.xkey.keycode == 116) {
+        if (ksym == XK_Down) {
           position->down = position->down + position->scale / movingfact;
           ximage = redraw(winData, position);
         }
