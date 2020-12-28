@@ -19,9 +19,9 @@ make
 ## keyboard
 q - zoom in
 a - zoom out
-r - more iterations( colors)
-f - lest iterations
-cursors  - scroll
+r - more iterations ( more colors - more details - more cpu intesive, but neede when zooming)
+f - less iterations
+cursors  - scroll left, up, right, down
 
 ## playing with cores
 
